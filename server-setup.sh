@@ -3,6 +3,5 @@ yum -y install docker
 systemctl unmask docker
 systemctl start docker
 docker run --name aline-mysql -p 3306 -e MYSQL_ROOT_PASSWORD=definitely_a_real_password -d mysql:latest
-yum -y install httpd
 
 #Then connect to the server using set up and use something like MySQL Workbench to upload model.
