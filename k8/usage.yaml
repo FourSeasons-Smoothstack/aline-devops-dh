@@ -1,0 +1,265 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: aline-db-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aline-db
+  labels:
+    app: aline-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aline-db
+  template:
+    metadata:
+      labels:
+        app: aline-db
+    spec:
+      containers:
+        - name: aline-db
+          image: public.ecr.aws/c0j0y9o1/aline-banking-dh:aline-db
+          imagePullPolicy: IfNotPresent
+          ports:
+          - protocol: TCP
+            containerPort: 3306
+          volumeMounts:
+          - name: aline-db
+            mountPath: /var/opt/aline-db/data
+      volumes:
+      - name: aline-db
+        persistentVolumeClaim:
+          claimName: aline-db-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aline-db-service
+spec:
+  selector:
+    app: aline-db
+  ports:
+  - protocol: TCP
+    port: 3306
+    targetPort: 3306
+  clusterIP: None
+
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: aline-underwriter-service
+spec:
+  selector:
+    app: aline-underwriter
+  ports:
+  - protocol: TCP
+    port: 8091
+    targetPort: 8091
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aline-underwriter
+  labels:
+    app: aline-underwriter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aline-underwriter
+  template:
+    metadata:
+      labels:
+        app: aline-underwriter
+    spec:
+      containers:
+      - name: aline-underwriter
+        image: public.ecr.aws/c0j0y9o1/aline-banking-dh:aline-underwriter
+        imagePullPolicy: IfNotPresent
+        envFrom:
+          - secretRef:
+              name: secretenv
+        ports:
+        - protocol: TCP
+          containerPort: 8091
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aline-bank
+  labels:
+    app: aline-bank
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aline-bank
+  template:
+    metadata:
+      labels:
+        app: aline-bank
+    spec:
+      containers:
+      - name: aline-bank
+        image: public.ecr.aws/c0j0y9o1/aline-banking-dh:aline-bank
+        imagePullPolicy: IfNotPresent
+        envFrom:
+          - secretRef:
+              name: secretenv
+        ports:
+        - protocol: TCP
+          containerPort: 8183
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: aline-bank-service
+spec:
+  selector:
+    app: aline-bank
+  ports:
+  - protocol: TCP
+    port: 8183
+    targetPort: 8183
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aline-transaction
+  labels:
+    app: aline-transaction
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aline-transaction
+  template:
+    metadata:
+      labels:
+        app: aline-transaction
+    spec:
+      containers:
+      - name: aline-transaction
+        image: public.ecr.aws/c0j0y9o1/aline-banking-dh:aline-transaction
+        imagePullPolicy: IfNotPresent
+        envFrom:
+          - secretRef:
+              name: secretenv
+        ports:
+        - protocol: TCP
+          containerPort: 8092
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: aline-transaction-service
+spec:
+  selector:
+    app: aline-transaction
+  ports:
+  - protocol: TCP
+    port: 8092
+    targetPort: 8092
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aline-user
+  labels:
+    app: aline-user
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aline-user
+  template:
+    metadata:
+      labels:
+        app: aline-user
+    spec:
+      containers:
+      - name: aline-user
+        image: public.ecr.aws/c0j0y9o1/aline-banking-dh:aline-user
+        imagePullPolicy: IfNotPresent
+        envFrom:
+          - secretRef:
+              name: secretenv
+        ports:
+        - protocol: TCP
+          containerPort: 8090
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: aline-user-service
+spec:
+  selector:
+    app: aline-user
+  ports:
+  - protocol: TCP
+    port: 8090
+    targetPort: 8090
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: aline-ingress
+spec:
+  rules:
+    - host : localhost
+      http:
+        paths:
+        - pathType: Prefix
+          path: /users/registration
+          backend:
+            service:
+              name: aline-user-service
+              port: 
+                number: 8090
+        - pathType: Prefix
+          path: /login
+          backend:
+            service:
+              name: aline-user-service
+              port:
+                number: 8090
+        - pathType: Prefix
+          path: /applications
+          backend:
+            service:
+              name: aline-underwriter-service
+              port:
+                number: 8091  
+        - pathType: Prefix
+          path: /banks
+          backend:
+            service:
+              name: aline-bank-service
+              port:
+                number: 8183  
+        - pathType: Prefix
+          path: /branches
+          backend:
+            service:
+              name: aline-bank-service
+              port:
+                number: 8183  
+        - pathType: Prefix
+          path: /transactions
+          backend:
+            service:
+              name: aline-transaction-service
+              port:
+                number: 8092 
