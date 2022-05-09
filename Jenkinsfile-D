@@ -5,6 +5,12 @@ agent any
 
     stages{
 
+        stage('Terraform Init'){
+            steps{
+                sh 'terraform init'
+            }
+        }
+
         stage('Terraform Destroy') {
             steps{
                 withAWS(credentials: 'aws-cred-dh', region: 'us-east-1'){
