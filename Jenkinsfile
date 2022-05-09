@@ -13,17 +13,21 @@ agent any
 
         stage('Terraform Plan') {
             steps{
-                sh 'terraform plan'
+                withAWS(credentials: 'aws-cred-dh', region: 'us-east-1'){
+                    
+                    sh 'terraform plan'
+                }
             }
         }
-
-        stage('Terraform Test with Sonarqube'){
+        stage('Terraform Analysis with Sonarqube'){
             steps{
-                script {
+                script{
+                    def scannerHome = tool 'SonarScanner';
                     withSonarQubeEnv('SonarScanner') {
-                        sh "${tool("sonarscan")}/bin/sonar-scanner -Dsonar.projectKey=terraform -Dsonar.sources=terraform"
+                      sh "${scannerHome}/bin/sonar-scanner"
                     }
                 }
+                
             }
         }
         stage('Quality Gate'){
@@ -41,6 +45,10 @@ agent any
         }
     } 
 }
+
+
+
+
 
 
 
