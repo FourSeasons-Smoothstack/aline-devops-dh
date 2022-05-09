@@ -46,7 +46,7 @@ resource "aws_iam_role_policy_attachment" "task_s3" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
 }
 
-resource "aws_iam_role_policy_attachment" "task_s3" {
+resource "aws_iam_role_policy_attachment" "task_s3-2" {
   role       = aws_iam_role.ecs_task_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 }
