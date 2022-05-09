@@ -18,7 +18,7 @@ agent any
             }
         }
 
-        stage('Terraform Test with Sonarqube')
+        stage('Terraform Test with Sonarqube'){
             steps{
                 script {
                     withSonarQubeEnv('SonarScanner') {
@@ -26,6 +26,7 @@ agent any
                     }
                 }
             }
+        }
         stage('Quality Gate'){
             steps{
                 withSonarQubeEnv('SonarScanner') {
@@ -36,7 +37,7 @@ agent any
 
         stage('Terraform Apply') {
             steps{
-                
+                echo 'Terraform Apply'
             }
         }
     } 
