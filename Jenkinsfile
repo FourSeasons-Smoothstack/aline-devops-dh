@@ -7,7 +7,6 @@ agent any
 
         stage('Terraform Init'){
             steps{
-                sh 'cd ./terraform'
                 sh 'terraform init'
             }
         }
