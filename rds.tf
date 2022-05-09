@@ -1,4 +1,4 @@
-resource "aws_db_instance" "aline-db-dh" {
+resource "aws_db_instance" "alinedbdh" {
   allocated_storage    = 10
   engine               = "mysql"
   engine_version       = "5.7"
