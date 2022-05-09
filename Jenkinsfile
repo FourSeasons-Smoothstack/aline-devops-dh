@@ -40,7 +40,10 @@ agent any
 
         stage('Terraform Apply') {
             steps{
-                echo 'Terraform Apply'
+                withAWS(credentials: 'aws-cred-dh', region: 'us-east-1'){
+                    
+                    sh 'terraform apply -auto-approve'
+                }
             }
         }
     } 
