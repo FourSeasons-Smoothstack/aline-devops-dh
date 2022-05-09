@@ -3,7 +3,7 @@ resource "aws_db_instance" "aline-db-dh" {
   engine               = "mysql"
   engine_version       = "5.7"
   instance_class       = "db.t3.micro"
-  name                 = "aline-db-dh"
+  name                 = "alinedbdh"
   username             = "admin"
   password             = "$$$$change-me$$$$$"
   parameter_group_name = "default.mysql5.7"

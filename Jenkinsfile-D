@@ -46,6 +46,15 @@ agent any
                 }
             }
         }
+
+        stage('Terraform Destroy') {
+            steps{
+                withAWS(credentials: 'aws-cred-dh', region: 'us-east-1'){
+                    
+                    sh 'terraform destroy -auto-approve'
+                }
+            }
+        }
     } 
 }
 
