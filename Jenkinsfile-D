@@ -51,7 +51,7 @@ agent any
             steps{
                 withAWS(credentials: 'aws-cred-dh', region: 'us-east-1'){
                     
-                    sh 'terraform destroy'
+                    sh 'terraform destroy -auto-approve'
                 }
             }
         }
