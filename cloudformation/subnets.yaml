@@ -1,0 +1,20 @@
+AlinePrivateSubnet:
+  Type: AWS::EC2::Subnet
+  Properties:
+    VpcId:
+      Ref: Aline-VPC-DH
+    CidrBlock: 10.1.0.0/24
+    AvailabilityZone: "us-east-1a"
+    Tags:
+    - Key: stack
+      Value: dev
+AlinePublicSubnet:
+  Type: AWS::EC2::Subnet
+  Properties:
+    VpcId:
+      Ref: Aline-VPC-DH
+    CidrBlock: 10.2.0.0/24
+    AvailabilityZone: "us-east-1a"
+    Tags:
+    - Key: stack
+      Value: dev

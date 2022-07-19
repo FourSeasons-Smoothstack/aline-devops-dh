@@ -1,0 +1,109 @@
+#Parameters:
+  #Fn::GetAZs
+Resources:  
+  AlineVPCDH:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: 'true'
+      EnableDnsHostnames: 'true'
+      Tags:
+      - Key: stack
+        Value: dev
+
+  AlinePrivateSubnetDH:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: AlineVPCDH
+      CidrBlock: 10.0.0.0/24
+      AvailabilityZone: !Select 
+        - 0
+        - Fn::GetAZs: !Ref 'AWS::Region'
+      Tags:
+      - Key: stack
+        Value: dev
+
+  AlinePublicSubnet1DH:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: AlineVPCDH
+      CidrBlock: 10.0.10.0/24
+      AvailabilityZone: !Select 
+        - 0
+        - Fn::GetAZs: !Ref 'AWS::Region'
+      Tags:
+      - Key: stack
+        Value: dev
+  AlinePublicSubnet2DH:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: AlineVPCDH
+      CidrBlock: 10.0.20.0/24
+      AvailabilityZone: !Select 
+        - 1
+        - Fn::GetAZs: !Ref 'AWS::Region'
+      Tags:
+      - Key: stack
+        Value: dev
+  AlineRouteTableDH:
+      Type: AWS::EC2::RouteTable
+      Properties:
+        VpcId:  
+          Ref: AlineVPCDH
+        Tags:
+        - Key: stack
+          Value: dev
+
+  AlineSubnetRouteTableAssociationDH:
+      Type: AWS::EC2::SubnetRouteTableAssociation
+      Properties:
+        SubnetId:
+          Ref: AlinePublicSubnet1DH
+        RouteTableId:
+          Ref: AlineRouteTableDH
+
+  AlineNATDH:
+    Type: AWS::EC2::NatGateway
+    Properties:
+        AllocationId:
+          Fn::GetAtt:
+          - AlineEIPDH
+          - AllocationId
+        SubnetId:
+          Ref: AlinePublicSubnet1DH
+        Tags:
+        - Key: stack
+          Value: dev
+
+  AlineInternetGateway:
+      Type: AWS::EC2::InternetGateway
+      Properties:
+        Tags:
+        - Key: stack
+          Value: dev
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId:
+        Ref: AlineVPCDH
+      InternetGatewayId:
+        Ref: AlineInternetGateway
+
+  AlineEIPDH:
+    DependsOn: AttachGateway
+    Type: AWS::EC2::EIP
+    Properties:
+        Domain: vpc
+
+  AlineInboundRouteDH:
+    Type: AWS::EC2::Route
+    Properties:
+        RouteTableId:
+          Ref: AlineRouteTableDH
+        DestinationCidrBlock: 0.0.0.0/0
+        NatGatewayId:
+          Ref: AlineNATDH

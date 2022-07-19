@@ -1,0 +1,51 @@
+- name: 'Login to Docker'
+  become: yes
+  command: docker login -u {{ user}} -p {{ password }}
+
+- name: 'Sign into ECR'
+  shell: aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin {{ account }}.dkr.ecr.us-east-1.amazonaws.com
+
+- name: "Install software"
+  become: yes
+  yum: name={{ item }} state=present
+  with_items: 
+    - git
+    - docker
+    - python
+- name: "Pip Install"
+  become: yes
+  pip: 
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - boto3
+    - pexpect
+- name: 'Start Services'
+  become: yes
+  service:
+    name: "{{ item }}"
+    state: started
+  with_items:
+    - docker
+- name: "Download Images"
+  become: yes
+  command: docker pull {{ account }}.dkr.ecr.us-east-1.amazonaws.com/{{ item }}
+  with_items: 
+    - aline-bank-dh:{{ version }}-latest
+    - aline-transactions-dh:{{ version }}-latest
+    - aline-underwriter-dh:{{ version }}-latest
+    - aline-users-dh:{{ version }}-latest
+
+- name: 'Run Docker Images'
+  become: yes
+  ignore_errors: yes
+  command: docker run -d {{ account }}.dkr.ecr.us-east-1.amazonaws.com/{{ item }}
+  with_items: 
+    - aline-underwriter-dh:{{version}}-latest
+    - aline-bank-dh:{{version}}-latest
+    - aline-transactions-dh:{{version}}-latest
+    - aline-users-dh:{{version}}-latest
+
+- name: 'Clean Docker'
+  command: docker system prune -f
+

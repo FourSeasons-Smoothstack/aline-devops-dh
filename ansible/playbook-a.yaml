@@ -1,0 +1,19 @@
+- name: Configure Artifactory
+  hosts: artifactory
+  become: yes
+  gather_facts: false
+  tasks:
+    - name: Download archive
+      command: 'wget -O jfrog-artifactory-pro.tar.gz "https://releases.jfrog.io/artifactory/artifactory-pro/org/artifactory/pro/jfrog-artifactory-pro/[RELEASE]/jfrog-artifactory-pro-[RELEASE]-linux.tar.gz"'
+    - name: Unpack Archive
+      command: 'tar -xvzf jfrog-artifactory-pro.tar.gz'
+    - name: Run artifactory script
+      command: './artifactory-pro*/app/bin/artifactoryctl start'
+    - name: Install CLI
+      command: 'echo "[jfrog-cli]" > jfrog-cli.repo;
+                echo "name=jfrog-cli" >> jfrog-cli.repo;
+                echo "baseurl=https://releases.jfrog.io/artifactory/jfrog-rpms" >> jfrog-cli.repo;
+                echo "enabled=1" >> jfrog-cli.repo;
+                rpm --import https://releases.jfrog.io/artifactory/jfrog-gpg-public/jfrog_public_gpg.key
+                sudo mv jfrog-cli.repo /etc/yum.repos.d/;
+                yum install -y jfrog-cli-v2-jf;'
