@@ -3,28 +3,25 @@
   become: yes
   gather_facts: false
   tasks:
-    - name: Update all packages to their latest version
+    - name: Update apt
       ansible.builtin.apt:
-        name: "*"
-        state: latest
+        update_cache: yes
 
     - name: Install software
       ansible.builtin.apt: 
         name: ['jq', 'wget', 'docker','docker-compose'] 
         state: present
+        
 
     - name: Start docker daemon
       command: "systemctl start docker.service"
 
     - name: Download archive
-      warn: false
       command: 'wget -O jfrog-compose-installer.tar.gz "https://releases.jfrog.io/artifactory/jfrog-prox/org/artifactory/pro/docker/jfrog-platform-trial-prox/7.41.4/jfrog-platform-trial-prox-7.41.4-compose.tar.gz"'
 
     - name: Unpack Archive
-      ansible.builtin.unarchive:
-        src: jfrog-compose-installer.tar.gz
-        dest: /
-
+      command: 'tar -xvzf jfrog-compose-installer.tar.gz'
+      
     - name: Run artifactory script
       command: 'jfrog-platform-trial-prox-7.41.4-compose/config.sh'
 
