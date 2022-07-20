@@ -1,0 +1,33 @@
+- name: Configure Artifactory
+  hosts: artifactory
+  become: yes
+  gather_facts: false
+  tasks:
+    - name: Update
+      command: 'apt-get update'
+
+    - name: Install software
+      apt: name={{ item }} state=present
+      with_items:
+        - jq 
+        - wget
+        - docker
+        - docker-compose
+
+    - name: Start docker daemon
+      command: "systemctl start docker.service"
+
+    - name: Download archive
+      command: 'wget -O jfrog-compose-installer.tar.gz "https://releases.jfrog.io/artifactory/jfrog-prox/org/artifactory/pro/docker/jfrog-platform-trial-prox/7.41.4/jfrog-platform-trial-prox-7.41.4-compose.tar.gz"'
+
+    - name: Unpack Archive
+      command: 'tar -xvzf jfrog-compose-installer.tar.gz'
+
+    - name: Run artifactory script
+      command: 'jfrog-platform-trial-prox-7.41.4-compose/config.sh'
+
+    - name: Start RabbitMQ
+      command: 'sudo docker-compose -p trial-pro-rabbitmq -f jfrog-platform-trial-prox-7.41.4-compose/docker-compose-rabbitmq.yaml up -d'
+      
+    - name: Start Artifactory/Xray
+      command: 'sudo docker-compose -p trial-pro -f jfrog-platform-trial-prox-7.41.4-compose/docker-compose.yaml up -d'
