@@ -3,17 +3,31 @@
   become: yes
   gather_facts: false
   tasks:
+    - name: Update
+      command: 'apt-get update'
+
+    - name: Install software
+      apt: name={{ item }} state=present
+      with_items:
+        - jq 
+        - wget
+        - docker
+        - docker-compose
+
+    - name: Start docker daemon
+      command: "systemctl start docker.service"
+
     - name: Download archive
-      command: 'wget -O jfrog-artifactory-pro.tar.gz "https://releases.jfrog.io/artifactory/artifactory-pro/org/artifactory/pro/jfrog-artifactory-pro/[RELEASE]/jfrog-artifactory-pro-[RELEASE]-linux.tar.gz"'
+      command: 'wget -O jfrog-compose-installer.tar.gz "https://releases.jfrog.io/artifactory/jfrog-prox/org/artifactory/pro/docker/jfrog-platform-trial-prox/7.41.4/jfrog-platform-trial-prox-7.41.4-compose.tar.gz"'
+
     - name: Unpack Archive
-      command: 'tar -xvzf jfrog-artifactory-pro.tar.gz'
+      command: 'tar -xvzf jfrog-compose-installer.tar.gz'
+
     - name: Run artifactory script
-      command: './artifactory-pro*/app/bin/artifactoryctl start'
-    - name: Install CLI
-      command: 'echo "[jfrog-cli]" > jfrog-cli.repo;
-                echo "name=jfrog-cli" >> jfrog-cli.repo;
-                echo "baseurl=https://releases.jfrog.io/artifactory/jfrog-rpms" >> jfrog-cli.repo;
-                echo "enabled=1" >> jfrog-cli.repo;
-                rpm --import https://releases.jfrog.io/artifactory/jfrog-gpg-public/jfrog_public_gpg.key
-                sudo mv jfrog-cli.repo /etc/yum.repos.d/;
-                yum install -y jfrog-cli-v2-jf;'
+      command: 'jfrog-platform-trial-prox-7.41.4-compose/config.sh'
+
+    - name: Start RabbitMQ
+      command: 'sudo docker-compose -p trial-pro-rabbitmq -f jfrog-platform-trial-prox-7.41.4-compose/docker-compose-rabbitmq.yaml up -d'
+      
+    - name: Start Artifactory/Xray
+      command: 'sudo docker-compose -p trial-pro -f jfrog-platform-trial-prox-7.41.4-compose/docker-compose.yaml up -d'
